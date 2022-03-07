@@ -35,7 +35,6 @@ type Strength a = (a, Int)
 
 -- VARIABLES -------------------------------------------------------------------
 contents = WordLists.file
-contentos = WordLists.file2
 
 
 
@@ -43,7 +42,6 @@ contentos = WordLists.file2
 
 {- elemFreq lst
    Calculates the number of occurrences of all elements in given list.
-   PRE: True
    RETURNS: a list of tuples with assigned values, in a ordered fashion (descending).
    EXAMPLES: elemFreq [('a','c'),('d','d'),('d','d')] == [(('d','d'),2),(('a','c'),1)]
              elemFreq ['a','a','b','c','c','f','a']   == [('a',3),('c',2),('f',1),('b',1)]
@@ -53,10 +51,9 @@ elemFreq :: Eq a => [a] -> [Strength a]
 
 {- elemFreqAux lst
    Calculates the number of occurrences of all elements in given list.
-   PRE: True
    RETURNS: a list of tuples with assigned values according to amount of occurrence in lst
    EXAMPLES: elemFreqAux [('a','c'),('d','d'),('d','d')] == [(('a','c'),1),(('d','d'),2)]
-             elemFreqAux "hello" == [('h',1),('e',1),('l',2),('o',1)]
+             elemFreqAux "hello"                         == [('h',1),('e',1),('l',2),('o',1)]
              elemFreqAux []                              == []
 -}
 --VARIANT: length lst
@@ -76,7 +73,8 @@ posFreq :: Int -> [String] -> [Strength Char]
 {- step rList contList wrongLetters contents special
    The step function is responsible for eliminating and keeping words based on given arguments.
    Each argument of the function correlates to a particular part of information gathered by the program.
-   RETURNS: a list of remaining possible words.
+   PRE: index in arguments with position < length of words in contents
+   RETURNS: a list of remaining possible words according to all given arguments
    EXAMPLES:
              Possible 5-letter english words (contents) ending with 'k',
              that contain the letter 'u' anywhere except in the middle of the word,
@@ -84,11 +82,12 @@ posFreq :: Int -> [String] -> [Strength Char]
              is expressed as:
              step [('k',4)] [('u',2)] "soare" contents [] == ["quick","mujik","pulik","tupik"]
 -}
-step :: [Position] -> [(Char,Int)] -> String -> [String] -> [(Char,Int)] -> [String]
+step :: [Position] -> [Position] -> String -> [String] -> [Position] -> [String]
 
 
 {- posTrial pos contents bool
    Removes (bool == False) or keeps (bool == True) strings that contain char at specified position.
+   PRE: index in pos < length of words in contents
    RETURNS: A list of strings in accordance with pos, with regard to bool.
    EXAMPLES: posTrial [('u', 0)] ["unity", "budge", "pkd"] True  == ["unity"              ]
              posTrial [('u', 0)] ["unity", "budge", "pkd"] False == [        "budge","pkd"]
@@ -101,6 +100,7 @@ posTrial :: [Position] -> [String] -> Bool -> [String]
 
 {- posTrialAux (c,n) contents bool
    Removes (bool == False) or keeps (bool == True) strings that contain char at specified position.
+   PRE: n < length of words in contents
    RETURNS: if bool == True then a list of words from contents containing c in position n,
             else a list of words from contents not containing c in position n
    EXAMPLES: posTrialAux ('u', 0) ["unity", "budge", "pkd"] True  == ["unity"              ]
@@ -144,7 +144,7 @@ wordFilter :: String -> [String] -> [String]
    Finds the best word in contents
    PRE: contents is not empty, length of each word is the same in contents and allcontents
    RETURNS: a list of the word giving the most information according to contents and allcontents
-   EXAMPLE: theBestWord contents contents == ["soare"]
+   EXAMPLE: theBestWord contents contents                  == ["aeros"]
             theBestWord ["hello","mello","cello"] contents == ["cello"]
 -}
 theBestWord :: Monad m => [String] -> [String] -> m String
@@ -161,8 +161,8 @@ wordStrength :: [String] -> [Strength String]
 {- findBestWord inpt
    Selects the strongest element in list.
    PRE: null inpt == False
-   RETURNS: first element of selected tuple in inpt.
-   EXAMPLE: findBestWord [("foo",3),("pkd", 100),("bar",99)]  == "pkd"
+   RETURNS: the string in the tuple with the highest strength in inpt
+   EXAMPLE: findBestWord [("foo",3),("pkd", 100),("bar",99)] == "pkd"
             findBestWord [("foo",3),("pkd",-100),("bar",99)] == "bar"
 -}
 findBestWord :: [Strength a] -> a
@@ -180,7 +180,7 @@ sumWords :: [String] -> [Strength Char] -> [Strength String]
 
 {- strSum str tpls acc
    Calcuates strength of given word.
-   PRE: (null str) || ((null tpls) == False)
+   PRE: str and tpls are not empty, all characters in str must appear in tpls
    RETURNS: a value describing the strength of str
    EXAMPLE: strSum "ab" [('a',10),('b',1),('c',1),('d',1)] [] == 11
             strSum  ""  []                                 [] ==  0
@@ -191,7 +191,7 @@ strSum :: String -> [Strength Char] -> [Char] -> Int
 
 {- fromBestWord lst acc
    Determines all the words with the highest strength.
-   PRE: (null lst == False) && lst must be sorted on snd and reversed
+   PRE: lst is not empty, lst must be sorted on snd in descending order
    RETURNS: a list of words from lst with the highest strength
    EXAMPLE: fromBestWord [("soare",6),("yummy",6),("d",5),("g",1)] [] == [("yummy",6),("soare",6)]
 
@@ -204,7 +204,7 @@ fromBestWord :: [Strength String] -> [Strength String] -> [Strength String]
    Calculates the Strength of a word relative to the Position-Strength of its Chars.
    PRE: length of words in tpls == length of words in lst
    RETURNS: a list of the new Strength of each element in tpls.
-   EXAMPLE:  smartBestWord [("arose",0),("soare",0)] contents == [("arose",3180),("soare",5604)]
+   EXAMPLE:  smartBestWord [("arose",0),("soare",0)] contents == [("arose",4699),("soare",7123)]
              smartBestWord []                        contents == []
 -}
 --VARIANT: length tpls
@@ -224,7 +224,8 @@ smartBestWordAux :: String -> Int -> [String] -> Int
 
 {- findInt c lst
    Finds the neighbouring element in an association list.
-   PRE: c must be present in lst
+   PRE: c must be present in lst, c only appears once in lst
+   RETURNS: the value from the tuple conrtaining c in lst
    EXAMPLES: findInt 'f' [('b',0),('f',1)] == 1
 -}
 findInt :: Char -> [(Char,Int)] -> Int
@@ -232,7 +233,7 @@ findInt :: Char -> [(Char,Int)] -> Int
 
 {- eraseWords str1 str2
    Filters out chars in str2 that is shared between the two arguments.
-   Pre: True
+   RETURNS: str2 without the characters in str1
    EXAMPLE: eraseWords "abc" "adbeca" == "de"
             eraseWords ""  "f"       == "f"
             eraseWords "f" ""        == ""
@@ -253,6 +254,7 @@ toListTuple :: String -> [Position]
 
 {- removeTuple str tpls
    Filters out any tuple whose key share same Char as str.
+   RETURNS: tpls without tuples containing characters from str
    EXAMPLES: removeTuple "david" [('e',0),('g',1)] == [('e',0),('g',1)]
              removeTuple "dave"  [('e',0),('g',1)] == [('g',1)]
 -}
@@ -262,6 +264,7 @@ removeTuple :: String -> [Position] -> [Position]
 {- posFilter str bits iteration
    Filters str according to bits.
    PRE: length str == length bits
+   RETURNS: a list of tuples with characters from str according to bits
    EXAMPLE: posFilter "David" [True,False,True,False,True] 0 == [('D',0),('v',2),('d',4)]
 -}
 --VARIANT: length str
@@ -281,7 +284,7 @@ validWord :: [String] -> String -> Bool
    PRE: length str == length bits
    RETURNS: a string with only the letters of str that match with bits are visable,
             other letters is shown as ' '
-   EXAMPLES: subWord "hello" [True,False,True,False,True] == "h l o"
+   EXAMPLES: subWord "hello" [True,False,True,False,True]    == "h l o"
              subWord "hello" [False,False,False,False,False] == "     "
 -}
 --VARIANT: length str
@@ -300,7 +303,7 @@ right :: String -> String -> [String]
    Finds letters from str1 that are in the same position as in str2
    PRE: length str1 == length str2
    RETURNS: a tuple with a string containing the right letters
-            and a BitCode showing what position they were in
+            and a BitCode showing what position they are in
    EXAMPLES: rightPosition "hello" "jello" == ("ello",[False,True,True,True,True])
              rightPosition "hello" "hales" == ("hl",[True,False,True,False,False])
              rightPosition "hello" "laugh" == ("",[False,False,False,False,False])
@@ -309,7 +312,7 @@ right :: String -> String -> [String]
 rightPosition :: String -> String  -> (String,BitCode)
 
 {- rwLetter str1 str2 bool
-   Finds letters from str1 that exist in str2, or letters that does not exist in str2
+   Finds intersecting letters (bool == True) or non-shared letters (bool == False)
    PRE: length str1 == length str2
    RETURNS: a string of the common letters between str1 and str2 if bool == True,
             else a string of the non-common letters between str1 and str2
@@ -321,7 +324,6 @@ rwLetter :: String -> String -> Bool -> String
 
 {- removeStr str1 str2
    Removes the exact amount of each char in str1 from str2
-   PRE: True
    RETURNS: str2 without the characters from str1
    EXAMPLE: removeStr "abc" "adbeca" == "dea"
             removeStr ""  "f"       == "f"
@@ -333,7 +335,6 @@ removeStr :: Eq a => [a] -> [a] -> [a]
 
 {- removeChar c str
    Removes the first occurrence of c in str
-   PRE: True
    RETURNS: str without the first c
    EXAMPLE: removeChar 'a' "adbeca" == "dbeca"
             removeChar 'e'  "f"       == "f"
@@ -412,11 +413,6 @@ fromBestWord ((a,b):(c,d):xs) acc
 smartBestWord [] allcontents = []
 smartBestWord ((x,_):xs) allcontents = (x,smartBestWordAux x 0 allcontents) : smartBestWord xs allcontents
 
-
--- smartBestWordAux123 (x:xs) n word allcontents
---  | n == (length word)  = 0
---  | otherwise =  value + smartBestWordAux123 xs (n + 1) word allcontents
---     where value = findInt x (posFreq n allcontents)
 
 smartBestWordAux [] _ _ = 0
 smartBestWordAux (x:xs) n allcontents = value + smartBestWordAux xs (n + 1) allcontents

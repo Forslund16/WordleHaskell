@@ -53,12 +53,11 @@ randomizer contents rnum = do
 
 {- choose contents int
    Finds a word in contents with int
+   SIDE EFFECTS: all side effects from wordle function
 -}
 choose :: String -> Int -> IO ()
 choose contents int =
    wordle (head (drop int (lines contents))) (lines contents) (lines contents) 6 "abcdefghijklmnopqrstuvwxyz"
-
---(head (drop int (lines contents)))
 
 
 {- wordle str contents lives albet

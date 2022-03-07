@@ -58,6 +58,7 @@ randomizer contents rnum = do
 
 {- choose contents int
    Finds a word in contents with int
+   SIDE EFFECTS: all side effects from wordle function
 -}
 choose :: [String] -> Int -> IO ()
 choose contents int = do
@@ -71,6 +72,7 @@ choose contents int = do
    SIDE EFFECTS: input from keyboard and printing to terminal
 -}
 wordle :: (Show a, Fractional a, Eq a) => [[Char]] -> [String] -> [String] -> Int -> a -> a -> a -> IO ()
+--VARIANT: 6 * times
 wordle [] _ _ _ winCount iteration _ = putStrLn $ show winCount ++ "/" ++ show iteration ++ "    " ++ show (winCount / iteration)
 wordle (str:xs) allcontents contents lives winCount iteration times = do
   if iteration == times
