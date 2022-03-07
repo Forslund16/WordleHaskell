@@ -1,6 +1,6 @@
 
 -- EXPORT ----------------------------------------------------------------------
-module Solver(BitCode, step, sumWords, elemFreq, findBestWord,validWord,subWord,right,rightPosition,rwLetter,removeStr,removeChar,toListTuple,removeTuple,posFilter,eraseWords,theBestWord) where
+module Solver(BitCode, step,validWord,subWord,right,rightPosition,rwLetter,removeStr,toListTuple,removeTuple,posFilter,eraseWords,theBestWord) where
 
 
 -- IMPORT ----------------------------------------------------------------------
